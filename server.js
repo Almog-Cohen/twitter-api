@@ -19,10 +19,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Would add middleware with express-valditator to validate the data has been sent by the client
 app.get("/tweets", (req, res) => {
   tweets.handleGetTweets(req, res, psqlDB);
 });
-// Get users data and store it in database
 app.post("/tweets", (req, res) => {
   tweets.handleInsertNewTweet(req, res, psqlDB);
 });

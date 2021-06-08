@@ -1,10 +1,9 @@
-// Get specific user data from the database
+// search for all avilable tweets and send them back to the client
 const handleGetTweets = async (req, res, psqlDB) => {
   try {
+    // Get all tweets data
     const tweets = await psqlDB.select("*").from("tweet");
-
     const getTweetsData = await getAllTweetsData(psqlDB, tweets);
-
     getTweetsData && getTweetsData.length
       ? res.json(getTweetsData)
       : res.status(404).json("No existing tweets");
@@ -13,7 +12,7 @@ const handleGetTweets = async (req, res, psqlDB) => {
     return res.status(500).json("Error in the server");
   }
 };
-
+// Add new tweet to the database.
 const handleInsertNewTweet = async (req, res, psqlDB) => {
   const { username, content } = req.body;
   try {
@@ -29,7 +28,7 @@ const handleInsertNewTweet = async (req, res, psqlDB) => {
   }
 };
 
-//
+// Add new like to the database.
 const handleInsertLike = async (req, res, psqlDB) => {
   const { id } = req.params;
   const { username } = req.body;
@@ -46,6 +45,7 @@ const handleInsertLike = async (req, res, psqlDB) => {
   }
 };
 
+// Add new retweet to the database.
 const handleInsertNewRetweet = async (req, res, psqlDB) => {
   const { id } = req.params;
   const { username } = req.body;
@@ -62,19 +62,22 @@ const handleInsertNewRetweet = async (req, res, psqlDB) => {
   }
 };
 
+// Get all the tweets data.
+// For each tweet we add likes count and retweet count.
 const getAllTweetsData = async (psqlDB, tweets) => {
   const arrayOfPromises = await Promise.all(
     tweets.map(async (tweet) => {
+      // Get sum of retweets
       const retweetsSum = await psqlDB
         .count("*")
         .from("retweet")
         .where("post_id", "=", tweet.id);
-
+      // Get sum of likes
       const likesSum = await psqlDB
         .count("*")
         .from("likes")
         .where("post_id", "=", tweet.id);
-
+      // Creating new tweet object
       const newTweetObject = {
         id: tweet.id,
         content: tweet.text,
