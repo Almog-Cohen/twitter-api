@@ -1,0 +1,30 @@
+version: "3.6"
+
+services:
+  #Backend API
+  backend-api:
+    container_name: backend
+    # build from dockerfile
+    build: ./
+    command: npm start
+    working_dir: /usr/src/tweetsapi
+    environment:
+      POSTGRES_URI: postgres://almog:postgres@postgres:5432/twitter
+    links:
+      - postgres
+    ## Exposing ports
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./:/usr/src/tweetsapi
+
+    #Postgres
+  postgres:
+    environment:
+      POSTGRES_USER: almog
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: twitter
+      POSTGRES_HOST: postgres
+    build: ./postgres
+    ports:
+      - "5432:5432"

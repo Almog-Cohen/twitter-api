@@ -1,9 +1,8 @@
-// search for all avilable tweets and send them back to the client
+// search for all available tweets and send them back to the client
 const handleGetTweets = async (req, res, psqlDB) => {
   try {
     // Get all tweets data
-    const tweets = await psqlDB.select("*").from("tweet");
-    const getTweetsData = await getAllTweetsData(psqlDB, tweets);
+    const getTweetsData = await getAllTweetsData(psqlDB);
     getTweetsData && getTweetsData.length
       ? res.json(getTweetsData)
       : res.status(404).json("No existing tweets");
@@ -15,12 +14,14 @@ const handleGetTweets = async (req, res, psqlDB) => {
 // Add new tweet to the database.
 const handleInsertNewTweet = async (req, res, psqlDB) => {
   const { username, content } = req.body;
+
   try {
     const newTweet = await psqlDB("tweet").insert({
       username: username,
       text: content,
       timestamp: new Date().getTime(),
     });
+    console.log(newTweet);
     return res.status(201);
   } catch (error) {
     console.log(error);
@@ -65,33 +66,21 @@ const handleInsertNewRetweet = async (req, res, psqlDB) => {
 // Get all the tweets data.
 // For each tweet we add likes count and retweet count.
 const getAllTweetsData = async (psqlDB, tweets) => {
-  const arrayOfPromises = await Promise.all(
-    tweets.map(async (tweet) => {
-      // Get sum of retweets
-      const retweetsSum = await psqlDB
-        .count("*")
-        .from("retweet")
-        .where("post_id", "=", tweet.id);
-      // Get sum of likes
-      const likesSum = await psqlDB
-        .count("*")
-        .from("likes")
-        .where("post_id", "=", tweet.id);
-      // Creating new tweet object
-      const newTweetObject = {
-        id: tweet.id,
-        content: tweet.text,
-        username: tweet.username,
-        timestamp: new Date(Number(tweet.timestamp)),
-        like_count: likesSum[0].count,
-        retweet_count: retweetsSum[0].count,
-      };
-
-      return newTweetObject;
-    })
-  );
-
-  return arrayOfPromises;
+  // This query will get all tweets data + retweet count and likes count.
+  //   SELECT * from tweet
+  //   LEFT JOIN (
+  //   SELECT *
+  // FROM (SELECT post_id,COUNT(post_id) as retweet_count
+  //      FROM retweet
+  //      GROUP BY post_id
+  //     ) r FULL JOIN
+  //     (SELECT post_id, COUNT(post_id) as likes_count
+  //      FROM likes
+  //      GROUP BY post_id
+  //     ) l
+  //     USING (post_id)
+  //   )
+  //   AS b on tweet.id=b.post_id
 };
 
 module.exports = {

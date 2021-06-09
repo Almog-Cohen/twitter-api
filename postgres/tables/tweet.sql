@@ -1,0 +1,10 @@
+BEGIN TRANSACTION;
+
+CREATE TABLE tweet (
+id serial PRIMARY KEY,
+username VARCHAR(100) NOT NULL,
+text VARCHAR NOT NULL,
+timestamp BIGINT NOT NULL
+);
+
+COMMIT;

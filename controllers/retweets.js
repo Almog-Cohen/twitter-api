@@ -2,8 +2,7 @@
 const handleGetRetweets = async (req, res, psqlDB) => {
   try {
     // Get all the retweets data
-    const retweets = await psqlDB("retweet").distinctOn("post_id");
-    const getRetweetsData = await getAllReTweetsData(psqlDB, retweets);
+    const getRetweetsData = await getAllReTweetsData(psqlDB);
     getRetweetsData && getRetweetsData.length
       ? res.json(getRetweetsData)
       : res.status(404).json("No existing retweets");
@@ -14,26 +13,11 @@ const handleGetRetweets = async (req, res, psqlDB) => {
 };
 // Get all the retweets data.
 // For each retweet we add content text, user name and id
-const getAllReTweetsData = async (psqlDB, retweets) => {
-  const arrayOfPromises = await Promise.all(
-    retweets.map(async (tweet) => {
-      const retweetsData = await psqlDB
-        .select("id", "username", "text")
-        .from("tweet")
-        .where("id", "=", tweet.post_id);
-      // Creating new retweet object
-      const newRetweetObject = {
-        content: retweetsData[0].text,
-        retweet_user: tweet.username,
-        tweet_id: retweetsData[0].id,
-        tweet_user: retweetsData[0].username,
-        timestamp: new Date(Number(tweet.timestamp)),
-      };
-      return newRetweetObject;
-    })
-  );
-
-  return arrayOfPromises;
+const getAllReTweetsData = async (psqlDB) => {
+  // This query giving as all the retweets data + content text, username and user id.
+  //   SELECT tweet.id,tweet.username as tweetuser,retweet.username as retweetuser,text,retweet.timestamp
+  //   FROM retweet,tweet
+  // WHERE tweet.id = retweet.post_id;
 };
 
 module.exports = {
